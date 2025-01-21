@@ -1,0 +1,84 @@
+# https://github.com/github/gitignore/blob/master/C++.gitignore
+#No git files
+nogit*
+# Prerequisites
+*.d
+*.def
+
+# Compiled Object files
+*.slo
+*.lo
+*.o
+*.obj
+*.tlog
+/obj
+
+# Precompiled Headers
+*.gch
+*.pch
+*.ipch
+*.idb
+*.VC.db
+*.exp
+
+# Compiled Dynamic libraries
+*.so
+*.dylib
+*.dll
+
+# Fortran module files
+*.mod
+*.smod
+
+# Compiled Static libraries
+*.lai
+*.la
+*.a
+*.lib
+*.pdb
+
+# Executables
+*.exe
+*.out
+*.app
+
+# makefiles
+*.mk
+*.mk.vs
+Makefile*
+
+# Python
+*.pyd
+*.pyc
+/**/.idea/
+/**/__pycache__/
+
+# Excel
+*.xls
+*.xlsx
+
+# TXT
+*.log
+*.txt
+CMakeLists.txt.user*
+!CMakeLists.txt
+!version.txt
+!readme.txt
+build/
+.vscode/
+
+# Arhive
+*.rar
+*.zip
+*.7z
+
+# Other
+*.dat
+*.wav
+*.bak
+*.jpg
+*.jpeg
+*.png
+
+# vim
+tags
