@@ -1,12 +1,11 @@
 /*
- * Lock-Free FIFO Queue implementation with intrusive nodes.
+ * Implementation Lock-Free FIFO Queue with many enqueuer and one dequeuer with intrusive nodes.
  * Lock-Free thread safe FIFO Queue with fake node.
  * Implementation of the "Two-Lock Concurrent Queue Algorithm" described in the
  * "Simple, Fast, and Practical Non-Blocking and Blocking Concurrent Queue Algorithms",
  * Maged M. Michael, Michael L. Scott, PODC96
  * https://www.cs.rochester.edu/research/synchronization/pseudocode/queues.html#tlq
  */
-
 #ifndef FIFO_LOCK_FREE_INTR_H_
 #define FIFO_LOCK_FREE_INTR_H_
 #include <fifo-common.h>
