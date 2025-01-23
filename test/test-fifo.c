@@ -28,6 +28,8 @@ static void usage(const char *prog_name)
             "                   The number of nodes in each thread adds. Default value: " MAKE_STR(POOL_NODE_SIZE) ".\n"
             "  -p, --pool_size\n"
             "                   Pool size for tests that use the pool. Default value: " MAKE_STR(POOL_SIZE) ".\n"
+            "  -b, --benchmark\n"
+            "                   this is benchmark.\n"
                     , prog_name);
 }
 
@@ -37,7 +39,8 @@ static int parse_args(int argc, char *argv[])
     params.addthread = TEST_THREAD_DEFAULT;
     params.delthread = TEST_THREAD_DEFAULT;
     params.num_node_per_thread = POOL_NODE_SIZE;
-    params.pool_size = POOL_NODE_SIZE;
+    params.pool_size = POOL_SIZE;
+    params.is_bench = false;
     int level = LOG_NOTICE;
 
     const struct option long_options[] = {
@@ -47,16 +50,20 @@ static int parse_args(int argc, char *argv[])
                 {"delthread",   required_argument,  0, 'd' },
                 {"num_node_per_thread",     required_argument,  0, 'i' },
                 {"pool_size",   required_argument,  0, 'p' },
+                {"bench",       no_argument,        0, 'b' },
                 {0,         0,                 0,  0 }
     };
 
     int c;
-    while( (c = getopt_long(argc, argv, "a:d:p:i:l:h", long_options, NULL)) != -1)
+    while( (c = getopt_long(argc, argv, "a:d:p:i:l:bh", long_options, NULL)) != -1)
     {
         switch(c)
         {
         case 'a':
             params.addthread = (int)strtol(optarg, NULL, 0);
+            break;
+        case 'b':
+            params.is_bench = true;
             break;
         case 'd':
             params.delthread = (int)strtol(optarg, NULL, 0);
@@ -123,7 +130,9 @@ int main(int argc, char *argv[])
     SRunner *sr = srunner_create(fix_allocator_suite());
     srunner_add_suite(sr, fifo_tlq_fix_suite());
     srunner_add_suite(sr, fifo_fn_fix_suite());
+    srunner_add_suite(sr, fifo_lfi_suite());
     srunner_add_suite(sr, fifo_tlqi_suite());
+    srunner_add_suite(sr, fifo_li_suite());
 
     srunner_run_all(sr, CK_NORMAL);
     number_failed = srunner_ntests_failed(sr);

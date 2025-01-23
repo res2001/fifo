@@ -1,5 +1,5 @@
 #include "test-fifo.h"
-#include <fifo-two-lock-intr.h>
+#include <fifo-lock-intr.h>
 #include <stdbool.h>
 #include <stdatomic.h>
 
@@ -18,13 +18,13 @@
 typedef void * (*thread_func_t)(void*);
 
 typedef struct {
-    fifo_node_tlqi_t node;
+    fifo_node_li_t node;
     int64_t data;
 } test_data_t;
 
 typedef struct
 {
-    fifo_head_tlqi_t * head;
+    fifo_head_li_t * head;
     test_data_t * data_pool;
     int64_t sum;
     int64_t add;
@@ -34,7 +34,7 @@ typedef struct
 
 typedef struct
 {
-    fifo_head_tlqi_t * head;
+    fifo_head_li_t * head;
     int64_t sum;
     uint32_t countok, countbusy, counterr, countmiss;
     int num_thread;
@@ -42,7 +42,7 @@ typedef struct
 
 static atomic_bool stop = false;
 
-static void* tlqi_adding_wait(void * arg)
+static void* li_adding_wait(void * arg)
 {
     thread_adding_arg_t * s = (thread_adding_arg_t*) arg;
     int64_t i = 0;
@@ -58,7 +58,7 @@ static void* tlqi_adding_wait(void * arg)
     {
         const int64_t data = i + s->add;
         s->data_pool[i].data = data;
-        const int ret = fifo_tlqi_wait_push_back(s->head, & s->data_pool[i].node);
+        const int ret = fifo_li_wait_push_back(s->head, & s->data_pool[i].node);
         switch(ret)
         {
         case QUEUE_SUCCESS:
@@ -77,11 +77,11 @@ static void* tlqi_adding_wait(void * arg)
 }
 
 /*
-static void* tlqi_deleting_wait(void * arg)
+static void* li_deleting_wait(void * arg)
 {
     thread_deleting_arg_t * s = (thread_deleting_arg_t*) arg;
     int64_t i = 0;
-    fifo_node_tlqi_t *node;
+    fifo_node_li_t *node;
     int64_t * data;
     int nt = s->num_thread;
     s->sum = 0;
@@ -95,7 +95,7 @@ static void* tlqi_deleting_wait(void * arg)
     while(true)
     {
         data = NULL;
-        const int ret = fifo_tlqi_wait_pop_first(s->head, & node);
+        const int ret = fifo_li_wait_pop_first(s->head, & node);
         switch(ret)
         {
         case QUEUE_SUCCESS:
@@ -128,11 +128,11 @@ static void* tlqi_deleting_wait(void * arg)
     return 0;
 }
 */
-static void* tlqi_deleting_try(void * arg)
+static void* li_deleting_try(void * arg)
 {
-    // ck_assert_ptr_nonnull(arg);
+    ck_assert_ptr_nonnull(arg);
     thread_deleting_arg_t * s = (thread_deleting_arg_t*) arg;
-    fifo_node_tlqi_t *node;
+    fifo_node_li_t *node;
     test_data_t *data;
     int nt = s->num_thread;
     s->sum = 0;
@@ -145,7 +145,7 @@ static void* tlqi_deleting_try(void * arg)
 
     while(true)
     {
-        const int ret = fifo_tlqi_try_pop_first(s->head, & node);
+        const int ret = fifo_li_try_pop_first(s->head, & node);
         switch(ret)
         {
         case QUEUE_SUCCESS:
@@ -172,14 +172,14 @@ static void* tlqi_deleting_try(void * arg)
         case QUEUE_STOP:
             return 0;
         default:
-            LOG_WRITE_ERROR("fifo_tlqi_try_pop_first return: %d\n", ret);
+            LOG_WRITE_ERROR("fifo_li_try_pop_first return: %d\n", ret);
             ck_abort();
         }
     }
     return 0;
 }
 
-static void test_fifo_tlqi_impl(const char * msg, fifo_head_tlqi_t * head,
+static void test_fifo_li_impl(const char * msg, fifo_head_li_t * head,
                                    thread_func_t adding, thread_func_t deleting)
 {
     LOG_WRITE_INFO("Test %s\n", msg);
@@ -286,43 +286,42 @@ static void test_fifo_tlqi_impl(const char * msg, fifo_head_tlqi_t * head,
     LOG_WRITE_INFO("acountok = %u dcountok = %u\n", acountok, dcountok);
     LOG_WRITE_INFO("acounterr: %u dcountmiss: %u dcounterr: %u dcountbusy: %u\n",
                    acounterr, dcountmiss, dcounterr, dcountbusy);
-    LOG_WRITE_INFO("FIFO is empty: %s\n", head->begin->next == NULL ? "yes" : "no");
-    LOG_WRITE_INFO("FIFO fake push: %u fake pop: %u\n", head->fake_in, head->fake_out);
+    LOG_WRITE_INFO("FIFO is empty: %s\n", head->begin == NULL ? "yes" : "no");
     ck_assert_int_eq(addsum, delsum);
     ck_assert_uint_eq(acountok, dcountok);
 }
 /*
-START_TEST(test_fifo_tlqi_delwait)
+START_TEST(test_fifo_li_delwait)
 {
-    fifo_head_tlqi_t head;
-    ck_assert_int_eq(fifo_tlqi_init(&head), 0);
-    test_fifo_tlqi_impl(__func__, & head, tlqi_adding, tlqi_deleting_wait);
+    fifo_head_li_t head;
+    ck_assert_int_eq(fifo_li_init(&head), 0);
+    test_fifo_li_impl(__func__, & head, li_adding, li_deleting_wait);
     fifo_tlq_fix_destroy(& head);
 }
 END_TEST
 */
-START_TEST(test_fifo_tlqi_deltry)
+START_TEST(test_fifo_li_deltry)
 {
-    fifo_head_tlqi_t head;
-    ck_assert_int_eq(fifo_tlqi_init(&head), 0);
-    test_fifo_tlqi_impl(__func__, & head, tlqi_adding_wait, tlqi_deleting_try);
-    fifo_tlqi_destroy(& head);
+    fifo_head_li_t head;
+    ck_assert_int_eq(fifo_li_init(&head), 0);
+    test_fifo_li_impl(__func__, & head, li_adding_wait, li_deleting_try);
+    fifo_li_destroy(& head);
 }
 END_TEST
 
-Suite* fifo_tlqi_suite(void)
+Suite* fifo_li_suite(void)
 {
-    Suite *s = suite_create("fifo-tlqi");
+    Suite *s = suite_create("fifo-li");
     TCase *tc;
 /*    
-    tc = tcase_create("fifo-tlqi-delwait");
+    tc = tcase_create("fifo-li-delwait");
     suite_add_tcase(s, tc);
-    tcase_add_test(tc, test_fifo_tlqi_delwait);
+    tcase_add_test(tc, test_fifo_li_delwait);
     tcase_set_timeout(tc, 0);
 */
-    tc = tcase_create("fifo-tlqi-deltry");
+    tc = tcase_create("fifo-li-deltry");
     suite_add_tcase(s, tc);
-    tcase_add_test(tc, test_fifo_tlqi_deltry);
+    tcase_add_test(tc, test_fifo_li_deltry);
     tcase_set_timeout(tc, 0);
 
     return s;

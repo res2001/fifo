@@ -95,7 +95,8 @@ static void* tlq_deleting_wait(void * arg)
         switch(ret)
         {
         case QUEUE_SUCCESS:
-            assert(data != NULL);
+            if (!params.is_bench)
+                ck_assert_ptr_nonnull(data);
             s->sum += *data;
             ++s->countok;
             ++i;
@@ -220,7 +221,7 @@ static void test_fifo_tlq_fix_impl(const char * msg, fifo_head_tlq_fix_t * head,
         sdel[i].num_thread = i + 1;
     }
 
-    uint64_t t = get_hrtime();
+    const uint64_t t = get_hrtime();
 
     for(i = 0; i < end; ++i)
     {
@@ -252,6 +253,7 @@ static void test_fifo_tlq_fix_impl(const char * msg, fifo_head_tlq_fix_t * head,
         LOG_WRITE_DEBUG("addsum[%d] = %" PRIi64 " Counters OK: %u miss: %u err: %u\n",
                        i, sadd[i].sum, sadd[i].countok, sadd[i].countmiss, sadd[i].counterr);
     }
+    const uint64_t t1 = get_hrtime() - t;
 
     LOG_WRITE_INFO("Stop remover threads\n");
     atomic_store_explicit(& stop, true, memory_order_relaxed);
@@ -269,8 +271,9 @@ static void test_fifo_tlq_fix_impl(const char * msg, fifo_head_tlq_fix_t * head,
                        i, sdel[i].sum, sdel[i].countok, sdel[i].countmiss, sdel[i].countbusy, sdel[i].counterr);
     }
 
-    t = get_hrtime() - t;
-    LOG_WRITE_NOTICE("%s: elapsed time: %.4f sec.\n", msg, ((double)t) / NANOSEC);
+    const uint64_t t2 = get_hrtime() - t;
+    LOG_WRITE_NOTICE("Elapsed time for the add threads: %.4f sec.\n", ((double)t1) / NANOSEC);
+    LOG_WRITE_NOTICE("All elapsed time: %.4f sec.\n", ((double)t2) / NANOSEC);
 
     free(data_pool);
     free(tadd);
@@ -289,7 +292,7 @@ static void test_fifo_tlq_fix_impl(const char * msg, fifo_head_tlq_fix_t * head,
 static void test_tlq_head_init(fifo_head_tlq_fix_t *head)
 {
     assert(head);
-    const size_t queue_size = (size_t) (params.pool_size == 0 ? params.num_node_per_thread : params.pool_size);
+    const size_t queue_size = (size_t) (params.pool_size == 0 ? params.num_node_per_thread * params.addthread : params.pool_size);
     LOG_WRITE_INFO("%s(): max queue size = %" PRIuPTR "\n", __func__, queue_size);
     if(fifo_tlq_fix_init(head, queue_size))
     {

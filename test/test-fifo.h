@@ -2,6 +2,7 @@
 #define TEST_FIFO_H_
 #include <fifo-common.h>
 #include <check.h>
+#include <stdbool.h>
 #include <inttypes.h>
 
 #define MILLISEC				1000
@@ -23,6 +24,7 @@ typedef struct
     int delthread;
     int num_node_per_thread;
     int pool_size;
+    bool is_bench;
 } fifo_params_t;
 
 extern fifo_params_t params;
@@ -53,6 +55,8 @@ extern const char *log_level_name[];
 Suite* fix_allocator_suite(void);
 Suite* fifo_tlq_fix_suite(void);
 Suite* fifo_fn_fix_suite(void);
+Suite* fifo_lfi_suite(void);
 Suite* fifo_tlqi_suite(void);
+Suite* fifo_li_suite(void);
 
 #endif /* TEST_FIFO_H_ */

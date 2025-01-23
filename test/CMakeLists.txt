@@ -1,3 +1,5 @@
+add_definitions(-DFIFO_DEBUG)
+
 #set-thread-affinity
 set(SET_THREAD_AFFINITY_INTERFACE ${CMAKE_CURRENT_SOURCE_DIR}/set-thread-affinity.h)
 set(SET_THREAD_AFFINITY_SOURCES set-thread-affinity.c)
@@ -8,14 +10,29 @@ target_link_libraries(set-thread-affinity Threads::Threads)
 
 #test-multithread
 set(TEST_FIFO_SOURCES
-    test-fifo.c test-queue-fix-allocator.c test-fifo-two-lock-fix.c test-fifo-fake-node-fix.c test-fifo-two-lock-intr.c
+    test-fifo.c 
+    test-queue-fix-allocator.c 
+    test-fifo-two-lock-fix.c 
+    test-fifo-fake-node-fix.c 
+    test-fifo-lock-free-intr.c
+    test-fifo-two-lock-intr.c
+    test-fifo-lock-intr.c
 )
 set(TEST_FIFO_HEADERS test-fifo.h)
 if(CMAKE_SYSTEM_NAME MATCHES "Windows")
     set(TEST_FIFO_LINK timestamp-win last-error-win bit-scan-revers)
 endif()
 add_executable(test-fifo ${TEST_FIFO_SOURCES} ${TEST_FIFO_HEADERS})
-add_dependencies(test-fifo set-thread-affinity fifo-two-lock-fix queue-fix-allocator-ts fifo-fake-node-fix fifo-lock-free-intr ${TEST_FIFO_LINK})
+add_dependencies(test-fifo 
+    set-thread-affinity 
+    fifo-two-lock-fix 
+    queue-fix-allocator-ts 
+    fifo-fake-node-fix 
+    fifo-lock-free-intr 
+    fifo-two-lock-intr 
+    fifo-lock-intr
+    ${TEST_FIFO_LINK}
+)
 target_link_libraries(test-fifo 
         ${TEST_FIFO_LINK}
         set-thread-affinity 
@@ -23,6 +40,8 @@ target_link_libraries(test-fifo
         queue-fix-allocator-ts 
         fifo-fake-node-fix 
         fifo-lock-free-intr 
+        fifo-two-lock-intr
+        fifo-lock-intr
         PkgConfig::check 
         Threads::Threads
 )
